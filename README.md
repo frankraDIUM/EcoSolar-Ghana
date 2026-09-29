@@ -6,6 +6,14 @@ The analytical pipeline is designed to be **AOI-agnostic**, not a one-off “Sav
 
 ---
 
+Platform view
+
+<p align="center">
+  <img src="https://github.com/frankraDIUM/EcoSolar-Ghana/blob/main/eco.gif" />
+</p>
+
+
+---
 ## Live demo
 
 **[EcoSolar-Ghana Decision Support](https://frankradium.github.io/EcoSolar-Ghana/)**
