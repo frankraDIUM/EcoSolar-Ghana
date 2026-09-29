@@ -2,7 +2,7 @@
 A GeoAI-enabled decision-support for solar screening: multi-criteria suitability, spatial candidate delineation, ranking, and human review.
 
 Savannah Region (Ghana) is the first validation study area.  
-The analytical pipeline is designed to be **AOI-agnostic**,not a one-off “Savannah-only model.”
+The analytical pipeline is designed to be **AOI-agnostic**, not a one-off “Savannah-only model.”
 
 ---
 
