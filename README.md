@@ -1,10 +1,6 @@
  # ☀️ EcoSolar-Ghana
 A GeoAI-enabled decision-support for solar screening: multi-criteria suitability, spatial candidate delineation, ranking, and human review.
 
-# EcoSolar-Ghana
-
-**GeoAI decision-support for environmentally responsible utility-scale solar site screening**
-
 Savannah Region (Ghana) is the first validation study area.  
 The analytical pipeline is designed to be **AOI-agnostic** — not a one-off “Savannah-only model.”
 
