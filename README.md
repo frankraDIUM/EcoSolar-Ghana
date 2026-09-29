@@ -60,7 +60,7 @@ Desktop / field-oriented validation
 Decision-support interfaces
   Streamlit prototype  ·  GitHub Pages web app
 ```
-## Analytical pipeline (completed)
+## Pipeline
 Data layers
 
 
