@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EcoSolar-Ghana Decision Support</title>
+<link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet">
+<link href="https://cesium.com/downloads/cesiumjs/releases/1.120/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+<style>
+:root{--g:#173F35;--bg:#F5F7F6;--line:#DDE5E1;--amber:#D99A1E;--mut:#68766F}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:#34423D;font:14px/1.45 system-ui,sans-serif}
+h1,h2,h3,h4{color:var(--g);margin:.3rem 0}
+header{background:#fff;border-bottom:1px solid var(--line);border-left:6px solid var(--g);padding:.9rem 1.5rem}
+header h1{font-size:1.7rem}header p{margin:0;color:#4A5B55}
+.tag{display:inline-block;background:#E8F2ED;border:1px solid #C5DCDB;border-radius:6px;padding:.1rem .5rem;font-weight:600;font-size:.8rem;margin-top:.4rem}
+.layout{display:flex;min-height:calc(100vh - 100px)}
+aside{width:240px;background:#EEF3F0;border-right:1px solid #D8E2DD;padding:1rem;flex:none}
+main{flex:1;padding:1rem 1.5rem;min-width:0}
+aside label{display:block;margin:.7rem 0 .2rem;font-weight:600}
+aside select,aside input[type=range]{width:100%}
+aside .chk{font-weight:400;margin:.15rem 0}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.5rem;margin:.6rem 0}
+.m{background:#fff;border:1px solid var(--line);border-radius:6px;padding:.3rem .6rem}
+.m small{display:block;color:var(--mut);font-size:.75rem}.m b{font-size:1.1rem;color:var(--g)}
+.tabs{display:flex;gap:.3rem;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tabs button,.seg button{border:0;background:none;padding:.5rem .85rem;font:inherit;cursor:pointer;border-radius:6px 6px 0 0;color:#34423D}
+.tabs button.on{background:#fff;border:1px solid var(--line);border-bottom-color:#fff;color:var(--g);font-weight:700;margin-bottom:-1px}
+.seg button{border:1px solid var(--line);border-radius:6px;margin-right:.3rem}.seg button.on{background:var(--g);color:#fff}
+.panel{display:none;padding-top:1rem}.panel.on{display:block}
+.card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:.9rem 1rem;margin-bottom:.8rem}
+.grid2{display:grid;grid-template-columns:1.4fr .6fr;gap:1rem}
+@media(max-width:900px){.layout{flex-direction:column}aside{width:auto}.grid2{grid-template-columns:1fr}}
+#map,#cesium{height:640px;border-radius:8px;border:1px solid var(--line);background:#101820}
+.badge{padding:.15rem .55rem;border-radius:999px;font-weight:600;font-size:.75rem;border:1px solid}
+.b-pass{background:#DFF2E8;color:#17633F;border-color:#B8DEC8}.b-fail{background:#FBE3E1;color:#9D2C26;border-color:#EFC0BC}
+.b-field_check{background:#FFF1D7;color:#8A5A00;border-color:#EACB8B}.b-unreviewed{background:#E8EDF0;color:#52616B;border-color:#D2DADF}
+button.p,a.p{background:var(--g);color:#fff;border:0;border-radius:6px;padding:.5rem .9rem;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block;font-size:.85rem}
+button.s{background:#fff;color:var(--g);border:1px solid var(--g);border-radius:6px;padding:.45rem .8rem;cursor:pointer;font-weight:600}
+textarea,select.big{width:100%;font:inherit;padding:.4rem;border:1px solid var(--line);border-radius:6px}
+select.big{max-width:420px;margin:.3rem 0}
+.tbl{overflow:auto;max-height:520px;background:#fff;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%}th,td{padding:.35rem .6rem;text-align:left;border-bottom:1px solid #eef2f0;white-space:nowrap}
+th{position:sticky;top:0;background:#F1F6F3;color:var(--g)}
+tr.sel{background:#FFF8E6}tbody tr{cursor:pointer}
+.coord{background:#F1F6F3;border-left:3px solid var(--amber);padding:.5rem .75rem;border-radius:6px;margin:.4rem 0}
+.mut{color:var(--mut);font-size:.78rem}
+.bars{display:flex;gap:.5rem;align-items:flex-end;height:160px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:.6rem}
+.bar{flex:1;background:var(--amber);border-radius:4px 4px 0 0;position:relative;min-height:2px}
+.bar span{position:absolute;top:-1.2em;width:100%;text-align:center;font-size:.72rem}.bar i{position:absolute;bottom:-1.4em;width:100%;text-align:center;font-size:.7rem;font-style:normal;color:var(--mut)}
+.simbar{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;margin:.6rem 0}
+footer{text-align:center;color:#52616B;font-size:.82rem;padding:1.5rem;border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+<header>
+  <h1>☀️ EcoSolar-Ghana</h1>
+  <p>Geo AI-enabled decision-support system for environmentally responsible utility-scale solar site screening and field validation.</p>
+  <span class="tag">📍 Currently showing: Savannah Region</span>
+</header>
+<div class="layout">
+<aside>
+  <h3>Site screening</h3>
+  <label>Candidate depth<select id="depth"><option>20</option><option selected>50</option><option>100</option><option>250</option><option>500</option></select></label>
+  <label>Minimum rank score: <span id="minv">0</span><input type="range" id="minrank" min="0" max="100" value="0"></label>
+  <label>Review status</label><div id="statusfilter"></div>
+  <hr><h4>Quick statistics</h4><div id="quick"></div>
+  <p class="mut">The analytical candidate layer is preserved. Human review is stored separately.</p>
+</aside>
+<main>
+<div class="tabs" id="tabs">
+  <button data-t="overview" class="on">Overview</button><button data-t="sites">Site Explorer</button>
+  <button data-t="review">Review Center</button><button data-t="forecast">Solar Forecast</button><button data-t="data">Data &amp; Downloads</button>
+</div>
+
+<section class="panel on" id="overview">
+  <h2>Decision-support overview</h2>
+  <p>EcoSolar identifies and ranks candidate utility-scale solar parcels using precomputed suitability, infrastructure-access and environmental screening layers. Reviewers can <b>pass</b>, <b>fail</b>, or flag a site for <b>field checking</b> without altering the model output.</p>
+  <div id="ovmetrics" class="metrics"></div>
+  <h3>Review status</h3><div id="statusbars" class="bars" style="height:180px"></div><br>
+  <h3>Current shortlist</h3><div class="tbl" id="shortlist"></div>
+</section>
+
+<section class="panel" id="sites">
+  <div class="seg"><button data-m="2d" class="on">Candidate site explorer</button><button data-m="3d">3D simulation</button></div>
+  <label>Select candidate site<br><select id="sitesel" class="big"></select></label>
+  <div id="sitehead"></div>
+  <div id="mode2d" class="grid2">
+    <div><div id="map"></div><div id="note" class="card" style="margin-top:.6rem"></div><div id="chars" class="card"></div></div>
+    <div class="card">
+      <h3>Review panel</h3>
+      <div class="coord" id="cand"></div>
+      <h4>Location</h4><div id="loc"></div><br><a class="p" id="gmaps" target="_blank" rel="noopener">Open in Google Maps</a>
+      <h4>Review decision</h4>
+      <p class="mut">Saved in this browser; export from Data &amp; Downloads to share.</p>
+      <div id="decision"></div>
+      <textarea id="revnote" rows="5" placeholder="settlement overlap, apparent water, cropland, access road, boundary issue, field verification required..."></textarea><br><br>
+      <button class="p" id="save" style="width:100%">Save review</button>
+    </div>
+  </div>
+  <div id="mode3d" style="display:none">
+    <div class="simbar">
+      <button class="p" id="showsim">Show simulation</button>
+      <label>Sun time (Accra): <b id="hrv">12:00</b> <input type="range" id="hour" min="6" max="18" step="0.25" value="12"></label>
+      <label><input type="checkbox" id="exag"> Exaggerate panel height</label>
+      <label>Cesium ion token (optional, enables 3D terrain) <input id="ion" size="18" placeholder="paste token"></label>
+    </div>
+    <div id="cesium"></div>
+    <p class="mut">🟦 Solar panel field · 🟨 Road access corridor · 🟩 Grid connection corridor · Footprint in dark green. The panel field is a conceptual layout. Road and grid corridors are schematic because verified infrastructure geometry is not in the candidate layer.</p>
+  </div>
+</section>
+
+<section class="panel" id="review">
+  <h2>Site review center</h2>
+  <p>Portfolio-level view of human review decisions. Record individual decisions in Site Explorer.</p>
+  <div id="rvmetrics" class="metrics"></div><div class="tbl" id="reviewtbl"></div>
+</section>
+
+<section class="panel" id="forecast">
+  <h2>Solar-relevant 7-day forecast</h2>
+  <p class="mut">Operational weather context only. Forecast values do not modify the analytical ranking. Source: Open-Meteo.</p>
+  <select id="fcsel" class="big"></select><div id="fctxt"></div><div id="fcout"></div>
+</section>
+
+<section class="panel" id="data">
+  <h2>Data &amp; downloads</h2>
+  <p>Candidate geometry stays intact; review decisions are an independent layer.</p>
+  <p><button class="p" id="dlcsv">Download current candidate table (CSV)</button>
+     <button class="s" id="dljson">Download review decisions (JSON)</button>
+     <label class="s" style="display:inline-block;padding:.45rem .8rem;border:1px solid var(--g);border-radius:6px;cursor:pointer">Import review decisions<input type="file" id="imp" accept=".json" hidden></label>
+     <button class="s" id="reset">Reset to desktop-validation seeds</button></p>
+  <h3>Current visible sites</h3><div class="tbl" id="visible"></div>
+  <h3>Data lineage</h3><p><b>Suitability</b> → Landscape delineation → Parcel generation → Site metrics → Composite ranking → Human review → Field validation</p>
+</section>
+</main>
+</div>
+<footer>EcoSolar • GeoAI solar site decision support • Built by Frank G. Asiamah</footer>
+
+<script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.120/Build/Cesium/Cesium.js"></script>
+<script>
+const ST={unreviewed:['Unreviewed','#60727A'],pass:['Pass','#238B57'],field_check:['Field check','#D18A00'],fail:['Fail','#C53B32']};
+const KEYS=Object.keys(ST), LS='ecosolar_reviews_v1', $=id=>document.getElementById(id);
+const FAILS={604:"Settlement risk — approximately 19% built-up land cover.",2708:"Settlement risk — approximately 8% built-up land cover."};
+const CHECKS={608:"Regional boundary location should be checked against the Savannah AOI during field/desktop validation.",
+601:"Representative point appeared to fall on apparent water/pond feature. Full polygon should be verified.",
+2703:"Representative point appeared to fall on possible water/rocky or irrigation feature. Full polygon should be verified.",
+2702:"Representative point appeared to fall on possible water/irrigation feature and has high cropland share.",
+2744:"High cropland share (~76%). Requires land-use / field assessment.",2755:"High cropland share (~63%). Requires land-use / field assessment.",
+2413:"High cropland share (~49%). Requires land-use / field assessment.",
+2707:"Desktop imagery suggests substantial tree/land-cover variation. Field/imagery verification recommended."};
+function seeds(){const r={},t=new Date().toISOString();
+  for(const k in FAILS)r[k]={status:'fail',note:FAILS[k],updated:t,source:'desktop_validation'};
+  for(const k in CHECKS)r[k]={status:'field_check',note:CHECKS[k],updated:t,source:'desktop_validation'};return r}
+let reviews;
+try{reviews=JSON.parse(localStorage.getItem(LS))||seeds()}catch{reviews=seeds()}
+const persist=()=>{try{localStorage.setItem(LS,JSON.stringify(reviews))}catch{}};
+persist();
+const stat=id=>(reviews[id]||{}).status||'unreviewed', note=id=>(reviews[id]||{}).note||'';
+
+let sites=[], view=[], sel=null, statusSel=new Set(KEYS), map=null, mapReady=false, mode='2d', viewer=null;
+const P=s=>s.properties, f=(v,d=1)=>Number(v).toFixed(d);
+
+fetch('data/sites.geojson').then(r=>r.json()).then(g=>{
+  sites=g.features.map(x=>{x.properties.site_id=+x.properties.site_id;return x});
+  init();
+}).catch(e=>{document.querySelector('main').insertAdjacentHTML('afterbegin',`<div class="card" style="border-color:#C53B32">Could not load data/sites.geojson (${e}). Run prep_data.py first.</div>`)});
+
+function init(){
+  $('statusfilter').innerHTML=KEYS.map(k=>`<label class="chk"><input type="checkbox" value="${k}" checked> ${ST[k][0]}</label>`).join('');
+  $('statusfilter').onchange=e=>{e.target.checked?statusSel.add(e.target.value):statusSel.delete(e.target.value);refresh()};
+  $('depth').onchange=refresh; $('minrank').oninput=()=>{$('minv').textContent=$('minrank').value;refresh()};
+  refresh();
+}
+function counts(){const c={};sites.forEach(s=>{const k=stat(P(s).site_id);c[k]=(c[k]||0)+1});return c}
+const M=(l,v)=>`<div class="m"><small>${l}</small><b>${v}</b></div>`;
+function table(rows,cols,click){
+  return `<table><thead><tr>${cols.map(c=>`<th>${c[0]}</th>`).join('')}</tr></thead><tbody>${rows.map(s=>`<tr data-id="${P(s).site_id}">${cols.map(c=>`<td>${c[1](P(s))}</td>`).join('')}</tr>`).join('')}</tbody></table>`}
+const badge=k=>`<span class="badge b-${k}">${ST[k][0]}</span>`;
+const COLS=[['Site',p=>p.site_id],['Landscape',p=>p.landscape_id],['Area (ha)',p=>f(p.area_ha)],['Suitability',p=>f(p.mean_score)],['Rank',p=>f(p.rank_score,2)],['Grid',p=>f(p.grid_score_mean)],['Road',p=>f(p.road_score_mean)],['Status',p=>badge(stat(p.site_id))]];
+
+function refresh(){
+  const depth=+$('depth').value, min=+$('minrank').value;
+  view=[...sites].sort((a,b)=>P(b).rank_score-P(a).rank_score).slice(0,depth)
+    .filter(s=>P(s).rank_score>=min&&statusSel.has(stat(P(s).site_id)));
+  const c=counts(), n=sites.length, rv=n-(c.unreviewed||0);
+  $('quick').innerHTML=`<div class="metrics" style="grid-template-columns:1fr">${M('Candidate sites',n)}${M('Reviewed',rv)}${M('Passed',c.pass||0)}${M('Field checks',c.field_check||0)}${M('Failed',c.fail||0)}</div>`;
+  $('ovmetrics').innerHTML=M('Candidate sites',n)+M('Reviewed',rv)+M('Passed',c.pass||0)+M('Field checks',c.field_check||0);
+  $('rvmetrics').innerHTML=KEYS.map(k=>M(ST[k][0],c[k]||0)).join('');
+  const mx=Math.max(1,...KEYS.map(k=>c[k]||0));
+  $('statusbars').innerHTML=['pass','field_check','fail','unreviewed'].map(k=>`<div class="bar" style="background:${ST[k][1]};height:${(c[k]||0)/mx*85+2}%"><span>${c[k]||0}</span><i>${ST[k][0]}</i></div>`).join('');
+  $('shortlist').innerHTML=view.length?table(view,COLS):'<p style="padding:1rem">No sites match the current filters.</p>';
+  $('reviewtbl').innerHTML=table([...sites].sort((a,b)=>P(b).rank_score-P(a).rank_score).slice(0,250),[...COLS,['Note',p=>note(p.site_id)]]);
+  $('visible').innerHTML=table(view,[...COLS,['Lat',p=>f(p.rep_lat,5)],['Lon',p=>f(p.rep_lon,5)],['Note',p=>note(p.site_id)]]);
+  const ids=view.map(s=>P(s).site_id);
+  if(!ids.includes(sel))sel=ids[0]??null;
+  $('sitesel').innerHTML=view.map(s=>`<option value="${P(s).site_id}">Site ${P(s).site_id} • Rank ${f(P(s).rank_score,2)}</option>`).join('');
+  $('sitesel').value=sel;
+  const fcIds=ids.length?ids:sites.slice(0,50).map(s=>P(s).site_id), cur=$('fcsel').value;
+  $('fcsel').innerHTML=fcIds.map(i=>`<option>${i}</option>`).join(''); if(fcIds.includes(+cur))$('fcsel').value=cur;
+  renderSite();
+}
+document.body.addEventListener('click',e=>{const tr=e.target.closest('tbody tr');
+  if(tr){sel=+tr.dataset.id;if(![...$('sitesel').options].some(o=>+o.value===sel))return;$('sitesel').value=sel;showTab('sites');renderSite()}});
+$('sitesel').onchange=()=>{sel=+$('sitesel').value;renderSite()};
+
+function showTab(t){document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id===t));
+  if(t==='sites'&&map)map.resize(); if(t==='forecast')loadForecast()}
+$('tabs').onclick=e=>{if(e.target.dataset.t)showTab(e.target.dataset.t)};
+document.querySelector('.seg').onclick=e=>{const m=e.target.dataset.m;if(!m)return;mode=m;
+  document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
+  $('mode2d').style.display=m==='2d'?'grid':'none';$('mode3d').style.display=m==='3d'?'block':'none';
+  if(m==='2d'&&map)map.resize();renderSite()};
+
+const cur=()=>sites.find(s=>P(s).site_id===sel);
+function renderSite(){
+  const s=cur(); if(!s){$('sitehead').innerHTML='<p>No sites match the current filters.</p>';return}
+  const p=P(s),k=stat(sel);
+  $('sitehead').innerHTML=`<span class="badge b-${k}">Site ${sel} • ${ST[k][0]}</span><div class="metrics">${M('Area',f(p.area_ha)+' ha')}${M('Rank score',f(p.rank_score,2))}${M('Suitability',f(p.mean_score))}${M('Grid access',f(p.grid_score_mean))}${M('Road access',f(p.road_score_mean))}</div>`;
+  $('note').innerHTML=note(sel)?`<b>Current review note:</b> ${esc(note(sel))}`:'<span class="mut">No review note recorded for this site.</span>';
+  $('chars').innerHTML=`<h4>Site characteristics</h4>Landscape: <b>${p.landscape_id}</b> · Parcel source: <b>${p.source??'—'}</b>${p.core_share_pct!=null?` · Core share: <b>${f(p.core_share_pct)}%</b>`:''}`;
+  $('cand').innerHTML=`<b>Site ${sel}</b><br>Current rank: <b>${f(p.rank_score,2)}</b><br>Current status: <b>${ST[k][0]}</b>`;
+  $('loc').innerHTML=`<div class="card" style="margin:0">Representative point<br>WGS84: <b>${f(p.rep_lat,6)}, ${f(p.rep_lon,6)}</b><br>Projected: <b>${f(p.rep_x)}, ${f(p.rep_y)}</b></div>`;
+  $('gmaps').href=`https://www.google.com/maps?q=${f(p.rep_lat,6)},${f(p.rep_lon,6)}`;
+  $('decision').innerHTML=KEYS.map(x=>`<label class="chk" style="display:inline-block;margin-right:.6rem"><input type="radio" name="dec" value="${x}" ${x===k?'checked':''}> ${ST[x][0]}</label>`).join('');
+  $('revnote').value=note(sel);
+  if(mode==='2d')drawMap(s,k);
+}
+const esc=t=>String(t).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+$('save').onclick=()=>{const v=document.querySelector('input[name=dec]:checked').value;
+  reviews[sel]={status:v,note:$('revnote').value,updated:new Date().toISOString(),source:'web_review'};persist();refresh()};
+
+function bounds(g){const b=[[1e9,1e9],[-1e9,-1e9]];const walk=a=>typeof a[0]==='number'?(b[0][0]=Math.min(b[0][0],a[0]),b[0][1]=Math.min(b[0][1],a[1]),b[1][0]=Math.max(b[1][0],a[0]),b[1][1]=Math.max(b[1][1],a[1])):a.forEach(walk);walk(g.coordinates);return b}
+function drawMap(s,k){
+  const col=ST[k][1],p=P(s),pt={type:'Feature',geometry:{type:'Point',coordinates:[p.rep_lon,p.rep_lat]}};
+  if(!map){
+    map=new maplibregl.Map({container:'map',center:[p.rep_lon,p.rep_lat],zoom:13,style:{version:8,sources:{r:{type:'raster',tileSize:256,attribution:'Esri, Maxar, Earthstar Geographics',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}']}},layers:[{id:'r',type:'raster',source:'r'}]}});
+    map.addControl(new maplibregl.NavigationControl());map.addControl(new maplibregl.ScaleControl());
+    map.on('load',()=>{mapReady=true;
+      map.addSource('site',{type:'geojson',data:s});map.addSource('pt',{type:'geojson',data:pt});
+      map.addLayer({id:'fill',type:'fill',source:'site',paint:{'fill-color':col,'fill-opacity':.45}});
+      map.addLayer({id:'line',type:'line',source:'site',paint:{'line-color':col,'line-width':3}});
+      map.addLayer({id:'pt',type:'circle',source:'pt',paint:{'circle-radius':8,'circle-color':col,'circle-stroke-width':2,'circle-stroke-color':'#fff'}});
+      map.on('click','fill',e=>new maplibregl.Popup().setLngLat(e.lngLat).setHTML(`<b>Site ${sel}</b><br>Rank: ${f(P(cur()).rank_score,2)}<br>Status: ${ST[stat(sel)][0]}`).addTo(map));
+      fit(s)});
+    return}
+  if(!mapReady){map.once('load',()=>drawMap(s,k));return}
+  map.getSource('site').setData(s);map.getSource('pt').setData(pt);
+  ['fill','line'].forEach(l=>map.setPaintProperty(l,l==='fill'?'fill-color':'line-color',col));map.setPaintProperty('pt','circle-color',col);fit(s)}
+const fit=s=>map.fitBounds(bounds(s.geometry),{padding:60,maxZoom:16,duration:600});
+
+/* ---------- Cesium 3D simulation ---------- */
+$('ion').value=localStorage.getItem('ecosolar_ion')||'';
+function ring(r,kx,ky,lo,la){return r.map(c=>[(c[0]-lo)*kx,(c[1]-la)*ky])}
+function inRing(x,y,r){let ins=false;for(let i=0,j=r.length-1;i<r.length;j=i++){const[a,b]=r[i],[c,d]=r[j];if((b>y)!==(d>y)&&x<(c-a)*(y-b)/(d-b)+a)ins=!ins}return ins}
+function buildPanels(geom,max=800){
+  const polys=geom.type==='Polygon'?[geom.coordinates]:geom.coordinates;
+  const b=bounds(geom),la=(b[0][1]+b[1][1])/2,lo=(b[0][0]+b[1][0])/2,ky=110540,kx=111320*Math.cos(la*Math.PI/180);
+  const rs=polys.map(p=>p.map(r=>ring(r,kx,ky,lo,la)));
+  const w=2,h=1.1;let sx=4,sy=5,pts=[];
+  const gen=()=>{pts=[];for(const p of rs){let mnx=1e9,mny=1e9,mxx=-1e9,mxy=-1e9;p[0].forEach(([x,y])=>{mnx=Math.min(mnx,x);mny=Math.min(mny,y);mxx=Math.max(mxx,x);mxy=Math.max(mxy,y)});
+    for(let y=mny+h;y<mxy-h;y+=sy)for(let x=mnx+w;x<mxx-w;x+=sx)if(inRing(x,y,p[0])&&!p.slice(1).some(hh=>inRing(x,y,hh)))pts.push([x,y])}};
+  gen();
+  // widen spacing (keeping layout regular) until the panel count fits the render cap
+  while(pts.length>max&&sx<400){const k=Math.sqrt(pts.length/max);sx*=k*1.02;sy*=k*1.02;gen()}
+  const sc=Math.max(1,sx/4);
+  return{lo,la,kx,ky,scale:sc,panels:pts.map(([x,y])=>[[-w/2,-h/2],[w/2,-h/2],[w/2,h/2],[-w/2,h/2]].flatMap(([dx,dy])=>[lo+(x+dx*sc)/kx,la+(y+dy*sc)/ky]))}}
+async function showSim(){
+  const s=cur();if(!s)return;const p=P(s);
+  const tok=$('ion').value.trim();try{localStorage.setItem('ecosolar_ion',tok)}catch{}
+  if(viewer){viewer.destroy();viewer=null}
+  if(tok)Cesium.Ion.defaultAccessToken=tok;
+  const base=Cesium.ImageryLayer.fromProviderAsync(Cesium.ArcGisMapServerImageryProvider.fromUrl('https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'));
+  viewer=new Cesium.Viewer('cesium',{baseLayer:base,baseLayerPicker:false,geocoder:false,animation:false,timeline:false,homeButton:false,navigationHelpButton:false,sceneModePicker:false,infoBox:true,shadows:true,terrain:tok?Cesium.Terrain.fromWorldTerrain():undefined});
+  viewer.scene.globe.enableLighting=true;viewer.scene.globe.depthTestAgainstTerrain=!!tok;
+  viewer.shadowMap.softShadows=true;viewer.shadowMap.size=2048;
+  let h0=0;
+  if(tok){try{const r=await Cesium.sampleTerrainMostDetailed(viewer.terrainProvider,[Cesium.Cartographic.fromDegrees(p.rep_lon,p.rep_lat)]);h0=r[0].height||0}catch{}}
+  const ex=$('exag').checked?4:1,g=s.geometry,polys=g.type==='Polygon'?[g.coordinates]:g.coordinates;
+  const C=Cesium.Color, flat=r=>Cesium.Cartesian3.fromDegreesArray(r.flat());
+  polys.forEach((pl,i)=>viewer.entities.add({name:`Site ${sel} footprint`,description:`Rank ${f(p.rank_score,2)} · ${f(p.area_ha)} ha`,
+    polygon:{hierarchy:{positions:flat(pl[0]),holes:pl.slice(1).map(h=>({positions:flat(h)}))},height:h0,extrudedHeight:h0+1,material:C.fromCssColorString('#173F35').withAlpha(.5),outline:true,outlineColor:C.fromCssColorString('#173F35')}}));
+  const B=buildPanels(g);
+  B.panels.forEach(pp=>viewer.entities.add({name:'Solar panel (conceptual)',polygon:{hierarchy:Cesium.Cartesian3.fromDegreesArray(pp),height:h0+1.5,extrudedHeight:h0+1.5+2*ex,material:C.fromCssColorString('#375F7D').withAlpha(.92),outline:true,outlineColor:C.fromCssColorString('#DCE6EB').withAlpha(.7),shadows:Cesium.ShadowMode.ENABLED}}));
+  // schematic corridors: same offsets as the Streamlit prototype (road 1.5 km west, grid 2 km E + 1 km N)
+  const bx=p.rep_lon,by=p.rep_lat;
+  const line=(name,dx,dy,color)=>viewer.entities.add({name,description:'Schematic corridor — not surveyed infrastructure.',polyline:{positions:Cesium.Cartesian3.fromDegreesArrayHeights([bx,by,h0+3,bx+dx/B.kx,by+dy/B.ky,h0+3]),width:6,material:new Cesium.PolylineGlowMaterialProperty({glowPower:.25,color:color})}});
+  line('Road access corridor (schematic)',-1500,0,C.fromCssColorString('#D18A00'));
+  line('Grid connection corridor (schematic)',2000,1000,C.fromCssColorString('#238B57'));
+  viewer.entities.add({name:`Site ${sel} representative point`,position:Cesium.Cartesian3.fromDegrees(bx,by,h0+8),point:{pixelSize:12,color:C.fromCssColorString('#D99A1E'),outlineColor:C.WHITE,outlineWidth:2}});
+  setSun();
+  viewer.camera.flyTo({destination:Cesium.Cartesian3.fromDegrees(bx,by-0.006,h0+900),orientation:{heading:0,pitch:Cesium.Math.toRadians(-40)},duration:1.5})}
+function setSun(){const h=+$('hour').value;$('hrv').textContent=`${String(Math.floor(h)).padStart(2,'0')}:${String(Math.round(h%1*60)).padStart(2,'0')}`;
+  if(!viewer)return;const d=new Date();viewer.clock.currentTime=Cesium.JulianDate.fromDate(new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate(),Math.floor(h),Math.round(h%1*60))));viewer.clock.shouldAnimate=false}
+$('showsim').onclick=showSim;$('hour').oninput=setSun;$('exag').onchange=()=>viewer&&showSim();
+
+/* ---------- Forecast ---------- */
+async function loadForecast(){
+  if(!$('fcsel').value)return;const s=sites.find(x=>P(x).site_id===+$('fcsel').value),p=P(s);
+  $('fctxt').innerHTML=`<p><b>Site ${p.site_id}</b> · ${f(p.rep_lat,6)}, ${f(p.rep_lon,6)} · Africa/Accra</p>`;$('fcout').innerHTML='Loading forecast…';
+  const q=new URLSearchParams({latitude:p.rep_lat,longitude:p.rep_lon,timezone:'Africa/Accra',forecast_days:7,daily:'shortwave_radiation_sum,sunshine_duration,daylight_duration,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,cloud_cover_mean,wind_speed_10m_max'});
+  try{const r=await fetch('https://api.open-meteo.com/v1/forecast?'+q);if(!r.ok)throw new Error('HTTP '+r.status);const d=(await r.json()).daily;
+    const rows=d.time.map((t,i)=>({t,sol:d.shortwave_radiation_sum[i]/3.6,sun:d.sunshine_duration[i]/3600,day:d.daylight_duration[i]/3600,tx:d.temperature_2m_max[i],tn:d.temperature_2m_min[i],cl:d.cloud_cover_mean[i],pr:d.precipitation_sum[i],pp:d.precipitation_probability_max[i],w:d.wind_speed_10m_max[i]}));
+    const tot=rows.reduce((a,r)=>a+r.sol,0),mx=Math.max(...rows.map(r=>r.sol)),T=rows[0];
+    $('fcout').innerHTML=`<h3>Today · ${T.t}</h3><div class="metrics">${M('Solar radiation',f(T.sol,2)+' kWh/m²')}${M('Sunshine',f(T.sun)+' h')}${M('Cloud cover',f(T.cl,0)+'%')}${M('Rain probability',f(T.pp,0)+'%')}</div>
+    <h3>7-day solar outlook</h3><div class="metrics">${M('7-day solar radiation',f(tot)+' kWh/m²')}${M('Daily average',f(tot/7,2)+' kWh/m²')}${M('Avg sunshine',f(rows.reduce((a,r)=>a+r.sun,0)/7)+' h/day')}${M('Total precipitation',f(rows.reduce((a,r)=>a+r.pr,0))+' mm')}</div>
+    <div class="bars" style="margin-bottom:2rem">${rows.map(r=>`<div class="bar" style="height:${r.sol/mx*82}%"><span>${f(r.sol,1)}</span><i>${r.t.slice(5)}</i></div>`).join('')}</div>
+    <div class="tbl">${table(rows.map(r=>({properties:r})),[['Date',r=>r.t],['Solar (kWh/m²)',r=>f(r.sol,2)],['Sunshine (h)',r=>f(r.sun)],['Daylight (h)',r=>f(r.day)],['Max °C',r=>r.tx],['Min °C',r=>r.tn],['Cloud %',r=>f(r.cl,0)],['Rain (mm)',r=>r.pr],['Rain prob %',r=>r.pp],['Max wind km/h',r=>r.w]])}</div>
+    <p class="mut">Forecast radiation is operational context, not the long-term resource used in suitability scoring.</p>`;
+  }catch(e){$('fcout').innerHTML=`<div class="card">Forecast unavailable: ${e.message}. Ranking and review still work.</div>`}}
+$('fcsel').onchange=loadForecast;
+
+/* ---------- Downloads ---------- */
+function dl(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();URL.revokeObjectURL(a.href)}
+$('dlcsv').onclick=()=>{const cols=['site_id','landscape_id','area_ha','mean_score','rank_score','grid_score_mean','road_score_mean','rep_lat','rep_lon','review_status','review_note'];
+  const q=v=>`"${String(v??'').replace(/"/g,'""')}"`;
+  dl(`ecosolar_shortlist_top${$('depth').value}.csv`,[cols.join(','),...view.map(s=>{const p={...P(s),review_status:stat(P(s).site_id),review_note:note(P(s).site_id)};return cols.map(c=>q(p[c])).join(',')})].join('\n'),'text/csv')};
+$('dljson').onclick=()=>dl('ecosolar_site_review_decisions.json',JSON.stringify(reviews,null,2),'application/json');
+$('imp').onchange=async e=>{try{const j=JSON.parse(await e.target.files[0].text());Object.assign(reviews,j);persist();refresh()}catch{alert('Could not read that JSON file.')}};
+$('reset').onclick=()=>{if(confirm('Replace all saved decisions in this browser with the desktop-validation seeds?')){reviews=seeds();persist();refresh()}};
+</script>
+</body>
+</html>
