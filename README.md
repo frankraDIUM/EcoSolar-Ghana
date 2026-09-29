@@ -105,9 +105,8 @@ Field-check flags for boundary, cropland, or pin/imagery uncertainty
 
 ## Key achievements
 
-Full screening chain: multi-source GIS → suitability → parcels → ranked sites
-Explicit energy–ecology framing via protected-area hard exclusion
-Parcel logic refined to prioritise contiguous, natural extents over quota-driven extraction
-AOI-agnostic module design (Savannah as configuration, not hard-coded identity)
-Human-in-the-loop review separated from model ranking
-Public interactive demo on GitHub Pages
+- Full screening chain: multi-source GIS → suitability → parcels → ranked sites
+- Explicit energy–ecology framing via protected-area hard exclusion
+- Parcel logic refined to prioritise contiguous, natural extents over quota-driven extraction
+- AOI-agnostic module design (Savannah as configuration, not hard-coded identity)
+- Human-in-the-loop review separated from model ranking
