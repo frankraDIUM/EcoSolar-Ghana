@@ -68,25 +68,27 @@ Decision-support interfaces
 Data layers
 
 
-Layer,Role
-AOI,Ghana ADM1 → Savannah Region
-Solar,Global Solar Atlas GHI (+ NASA POWER check)
-Terrain,DEM → slope / terrain suitability
-Land cover,ESA WorldCover → development suitability score
-Ecology,WDPA protected areas → hard exclusion
-Roads,OSM-derived accessibility score
-Transmission,Africa grid (Ghana) → grid proximity score
+| Layer        | Role                                           |
+| ------------ | ---------------------------------------------- |
+| AOI          | Ghana ADM1 → Savannah Region                   |
+| Solar        | Global Solar Atlas GHI (+ NASA POWER check)    |
+| Terrain      | DEM → slope / terrain suitability              |
+| Land cover   | ESA WorldCover → development suitability score |
+| Ecology      | WDPA protected areas → hard exclusion          |
+| Roads        | OSM-derived accessibility score                |
+| Transmission | Africa grid (Ghana) → grid proximity score     |
 
 Layers are aligned to a common analysis grid (~30.6 m, UTM) for overlay.
 Suitability model (v0.1)
 Factors (higher = better; illustrative weights):
 
-Factor,Weight
-Solar potential,35%
-Terrain,15%
-Land cover,15%
-Road accessibility,15%
-Grid proximity,20%
+| Factor             | Weight |
+| ------------------ | ------ |
+| Solar potential    | 35%    |
+| Terrain            | 15%    |
+| Land cover         | 15%    |
+| Road accessibility | 15%    |
+| Grid proximity     | 20%    |
 
 Constraint: protected areas are hard-excluded from the suitability surface.
 
