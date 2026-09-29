@@ -2,7 +2,7 @@
 A GeoAI-enabled decision-support for solar screening: multi-criteria suitability, spatial candidate delineation, ranking, and human review.
 
 Savannah Region (Ghana) is the first validation study area.  
-The analytical pipeline is designed to be **AOI-agnostic** — not a one-off “Savannah-only model.”
+The analytical pipeline is designed to be **AOI-agnostic**,not a one-off “Savannah-only model.”
 
 ---
 
@@ -13,7 +13,7 @@ The analytical pipeline is designed to be **AOI-agnostic** — not a one-off “
 Interactive MapLibre map · human review (pass / field check / fail) · 7-day solar weather context · optional Cesium 3D conceptual layout · CSV / JSON export.
 
 > Reviews are stored in the browser (`localStorage`). Export JSON from **Data & Downloads** to share or back up decisions.  
-> Screening support only — not a final engineering, environmental, land-tenure, or interconnection approval.
+> Screening support only, not a final engineering, environmental, land-tenure, or interconnection approval.
 
 ---
 
@@ -21,7 +21,7 @@ Interactive MapLibre map · human review (pass / field check / fail) · 7-day so
 
 Expanding renewable energy at utility scale can conflict with ecology, land use, and infrastructure reality. EcoSolar asks:
 
-> **Where can Ghana site utility-scale solar with strong resource and access — while respecting protected areas and screening out clearly unsuitable land?**
+> **Where can Ghana site utility-scale solar with strong resource and access while respecting protected areas and screening out clearly unsuitable land?**
 
 The system turns multi-source geospatial data into **ranked candidate parcels** and a **human-in-the-loop review layer**.
 
